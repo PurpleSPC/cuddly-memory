@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field, create_engine
+from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import date
 
@@ -18,9 +18,9 @@ class Surgeon(SQLModel, table=True):
 class SurgeonAccount(SQLModel, table=True):
     surgeon_id: int = Field(foreign_key="surgeon.id", primary_key=True)
     account_id: int = Field(foreign_key="account.id", primary_key=True)
-    __table_args__ = (
-        {"primary_key": ("surgeon_id", "account_id")}
-    )
+    # __table_args__ = (
+    #     {"primary_key": ("surgeon_id", "account_id")}
+    # )
 
 class SalesTeam(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -45,7 +45,7 @@ class Product(SQLModel, table=True):
 class Sale(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     sale_date: date
-    received_date: date = Field(default_factory=date.today)
+    received_date: date = Field(default_factory=lambda: date.today())
     account_id: int = Field(foreign_key="account.id")
     surgeon_id: int = Field(foreign_key="surgeon.id")
     rep_id: int = Field(foreign_key="rep.id")
@@ -55,8 +55,8 @@ class Sale(SQLModel, table=True):
 
 class SaleItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    sale_id: int = Field("sale.id")
-    product_id: int = Field("product.id")
+    sale_id: int = Field(foreign_key="sale.id")
+    product_id: int = Field(foreign_key="product.id")
     qty: int
     unit_price: float
     line_total: float 
@@ -72,9 +72,9 @@ class AccountProductPrice(SQLModel, table=True):
     account_id: int = Field(foreign_key="account.id", primary_key=True)
     product_id: int = Field(foreign_key="product.id", primary_key=True)
     unit_price: float
-    __table_args__ = (
-        {"primary_key": ("account_id", "product_id")}
-    )
+    # __table_args__ = (
+    #     {"primary_key": ("account_id", "product_id")}
+    # )
 
 
 class Location(SQLModel, table=True):
@@ -82,7 +82,7 @@ class Location(SQLModel, table=True):
     name: str= Field(unique=True)
     address: str
 
-class InventorySet(SQLModel, Table=True):
+class InventorySet(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     set_code: str = Field(unique=True)
     description: str
@@ -90,7 +90,7 @@ class InventorySet(SQLModel, Table=True):
     home_loc_id: int = Field(foreign_key="location.id")
     current_loc_id: int = Field(foreign_key="location.id")
 
-class InventoryMovement(SQLModel, Table=True):
+class InventoryMovement(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     set_id: int = Field(foreign_key="inventoryset.id")
     req_date: date 
