@@ -57,9 +57,14 @@ class SaleItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     sale_id: int = Field(foreign_key="sale.id")
     product_id: int = Field(foreign_key="product.id")
-    qty: int
-    unit_price: float
-    line_total: float 
+    qty: int = Field(default=1, gt=0)
+    unit_price: float = Field(default=0.00, ge=0.00)
+    line_total: float = Field(default=0.00)
+
+    # computes line_total
+    def __init__(self, **data):
+        super().__init__(**data)
+        self.line_total = self.qty * self.unit_price
 
 class PurchaseOrder(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

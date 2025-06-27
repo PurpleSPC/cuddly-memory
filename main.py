@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, create_engine, Session, select
+from sqlmodel import SQLModel, create_engine, Session, select, col
 from app.models.core import Account, Sale, SaleItem, Product, InventoryMovement, InventorySet, PurchaseOrder, SurgeonAccount, Surgeon, AccountProductPrice
 from datetime import date
 
@@ -25,18 +25,52 @@ def create_sale():
 
 def select_sales():
     with Session(engine) as session:
-        # select runs SELECT on Sale table
+        # select runs SQL SELECT on Sale table
         # session executes the statement in db 
         # select returns an iterable object
-        # results.all returns a list of results objects
-        sales = session.exec(select(Sale)).all()
-        print(sales)                
+        # .all returns a list of results objects
+        # sales = session.exec(select(Sale)).all()
+        # print(sales)   
+
+        # using .get() to select a row by id shortcut
+        # sale = session.get(Sale, 1)
+        # print(sale)
+        ...
+def update_sales():
+    with Session(engine) as session:
+        # start by selecting instance from table
+        statement = select(Sale).where(Sale.sale_date == date(2025,1,1))
+        results = session.exec(statement)
+        sale = results.one()
+        # update by setting the value (in memory)
+        sale.account_id = 123456
+        # use session.add and .commit to save change to db
+        session.add(sale)
+        session.commit()
+        #  .refresh the newly saved in db object into memory
+        session.refresh(sale)
+        print("updated sale id: ", sale.id, "Account id to:", sale.account_id)
+
+def delete_sale(): 
+    with Session(engine) as session:
+        statement = select(Sale).where(Sale.account_id == 123456)
+        results = session.exec(statement)
+        sale = results.one()
+        print(f"deleting saleID# {sale.id}.......")
+        session.delete(sale)
+        session.commit()
+        # deleted object sill exists in memory but not in db
+        print(f"Deleted Sale: {sale}")
+        
+
+
 
 def main():
     init_db()
     create_sale()
     select_sales()
-
+    update_sales()
+    delete_sale()
 
 if __name__ == "__main__":
     main()
