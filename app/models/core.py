@@ -44,7 +44,7 @@ class Product(SQLModel, table=True):
 
 class Sale(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    sale_date: date
+    sale_date: date = Field(default_factory=lambda: date.today())
     received_date: date = Field(default_factory=lambda: date.today())
     account_id: int = Field(foreign_key="account.id")
     surgeon_id: int = Field(foreign_key="surgeon.id")

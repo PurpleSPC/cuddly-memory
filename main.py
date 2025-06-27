@@ -1,16 +1,10 @@
 from sqlmodel import SQLModel, create_engine, Session, select, col
 from app.models.core import Account, Sale, SaleItem, Product, InventoryMovement, InventorySet, PurchaseOrder, SurgeonAccount, Surgeon, AccountProductPrice
 from datetime import date
+from app.db.database import engine
 
-# creating db
-sqlite_file_name = "database.db"
-DATABASE_URL = f"sqlite:///{sqlite_file_name}"
 
-engine = create_engine(DATABASE_URL)
 
-# initialize tables
-def init_db():
-    SQLModel.metadata.create_all(engine)
 
 # create instance of Sale
 def create_sale():
@@ -66,7 +60,6 @@ def delete_sale():
 
 
 def main():
-    init_db()
     create_sale()
     select_sales()
     update_sales()
