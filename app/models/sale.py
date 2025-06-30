@@ -3,8 +3,11 @@ from datetime import date
 from app.models.common import SQLModel, Field, Relationship
 
 if TYPE_CHECKING:
-    from .account import Account
+    from .account import Account, PurchaseOrder
     from .product import SaleItem
+    from .rep import SalesTeam, Rep
+    from .inventory import Location
+    from .surgeon import Surgeon
 
 class Sale(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -13,23 +16,17 @@ class Sale(SQLModel, table=True):
     account_id: int = Field(foreign_key="account.id")
     account: Account = Relationship(back_populates="sale")
     surgeon_id: int = Field(foreign_key="surgeon.id")
+    surgeon: Surgeon = Relationship(back_populates="sale")
     rep_id: int = Field(foreign_key="rep.id")
+    sales_team: SalesTeam = Relationship(back_populates="sale")
+    sales_rep: Rep = Relationship(back_populates="sale")
     po_id: Optional[int] = Field(foreign_key="purchaseorder.id")
+    purchase_order: PurchaseOrder = Relationship(back_populates="sale")
     rstck_loc_id: int = Field(foreign_key="location.id")
+    restock_loc: Location = Relationship(back_populates="sale")
     total_amt: float
     items: list[SaleItem] = Relationship(back_populates="sale")
 
-class SaleItem(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    sale_id: int = Field(foreign_key="sale.id")
-    product_id: int = Field(foreign_key="product.id")
-    qty: int = Field(default=1, gt=0)
-    unit_price: float = Field(default=0.00, ge=0.00)
-    line_total: float = Field(default=0.00)
-    # computes line_total
-    def __init__(self, **data):
-        super().__init__(**data)
-        self.line_total = self.qty * self.unit_price
 
 
 
