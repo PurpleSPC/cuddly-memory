@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, create_engine, Session, select, col
-from app.models.core import Account, Sale, SaleItem, Product, InventoryMovement, InventorySet, PurchaseOrder, SurgeonAccount, Surgeon, AccountProductPrice
+from app.models import Account, Sale, SaleItem, Product, InventoryMovement, InventorySet, PurchaseOrder, SurgeonAccount, Surgeon, AccountProductPrice
 from datetime import date
 from app.db.database import engine
 
