@@ -9,8 +9,8 @@ class Account(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True)
     address: Optional[str]
-    sales: list[Sale] = Relationship(back_populates="account")
-    surgeons: list[SurgeonAccount] = Relationship(back_populates="account")
+    sales: list["Sale"] = Relationship(back_populates="account")
+    surgeons: list["SurgeonAccount"] = Relationship(back_populates="account")
     
 class PurchaseOrder(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
