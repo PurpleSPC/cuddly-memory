@@ -14,7 +14,7 @@ class Sale(SQLModel, table=True):
     sale_date: date = Field(default_factory=lambda: date.today())
     received_date: date = Field(default_factory=lambda: date.today())
     account_id: int = Field(foreign_key="account.id")
-    account: Account = Relationship(back_populates="sale")
+    account: Optional["Account"] = Relationship(back_populates="sale")
     surgeon_id: int = Field(foreign_key="surgeon.id")
     surgeon: Surgeon = Relationship(back_populates="sale")
     rep_id: int = Field(foreign_key="rep.id")
@@ -25,7 +25,7 @@ class Sale(SQLModel, table=True):
     rstck_loc_id: int = Field(foreign_key="location.id")
     restock_loc: Location = Relationship(back_populates="sale")
     total_amt: float
-    items: list[SaleItem] = Relationship(back_populates="sale")
+    items: list["SaleItem"] = Relationship(back_populates="sale")
 
 
 

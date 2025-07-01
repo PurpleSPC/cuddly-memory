@@ -1,10 +1,11 @@
 from typing import TYPE_CHECKING, Optional
 from .common import SQLModel, Field, Relationship
+from .links import SurgeonAccountLink
+
 
 if TYPE_CHECKING:
     from .sale import Sale
     from .account import Account
-    from .links import SurgeonAccountLink
 
 
 class Surgeon(SQLModel, table=True):
@@ -12,6 +13,9 @@ class Surgeon(SQLModel, table=True):
     name: str = Field(unique=True)
     npi_no: Optional[int] = Field(unique=True)
     surgeries = list["Sale"] = Relationship(back_populates="surgeon")
-    accounts: list["Account"] = Relationship(back_populates="surgeons", link_model=SurgeonAccountLink)
+    accounts: list["Account"] = Relationship(
+        back_populates="surgeons", 
+        link_model=SurgeonAccountLink
+        )
 
 
