@@ -3,14 +3,15 @@ from app.models.common import SQLModel, Field, Relationship
 
 if TYPE_CHECKING:
     from .sale import Sale
-    from .surgeon import SurgeonAccount
+    from .surgeon import Surgeon
+    from .links import SurgeonAccountLink
 
 class Account(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True)
     address: Optional[str]
     sales: list["Sale"] = Relationship(back_populates="account")
-    surgeons: list["SurgeonAccount"] = Relationship(back_populates="account")
+    surgeons: list["Surgeon"] = Relationship(back_populates="accounts", link_model=SurgeonAccountLink)
     
 class PurchaseOrder(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -18,3 +19,7 @@ class PurchaseOrder(SQLModel, table=True):
     account_id: int = Field(foreign_key="account.id")
     sale_id: int = Field(foreign_key="sale.id")
     is_pending: bool
+
+class SurgeonAccountLink(SQLModel, table=True):
+    surgeon_id: int = Field(foreign_key="surgeon.id", primary_key=True)
+    account_id: int = Field(foreign_key="account.id", primary_key=True)
