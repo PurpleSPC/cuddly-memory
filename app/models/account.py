@@ -24,6 +24,3 @@ class PurchaseOrder(SQLModel, table=True):
     sale_id: int = Field(foreign_key="sale.id")
     is_pending: bool
 
-class SurgeonAccountLink(SQLModel, table=True):
-    surgeon_id: int = Field(foreign_key="surgeon.id", primary_key=True)
-    account_id: int = Field(foreign_key="account.id", primary_key=True)

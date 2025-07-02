@@ -12,11 +12,9 @@ class InventorySet(SQLModel, table=True):
     set_code: str = Field(unique=True)
     description: str
     prod_lin_id: int = Field(foreign_key="productline.id")
-    product_line: ProductLine = Relationship(back_populates="inventoryset")
-    products: list["Product"] = Relationship(back_populates="inventoryset")
-    home_loc_id: int = Field(foreign_key="location.id")
+    product_line: "ProductLine" = Relationship(back_populates="inventory_sets")
     current_loc_id: int = Field(foreign_key="location.id")
-    sales: list ["Sale"] = Relationship(back_populates="inventoryset")
+    current_loc: Optional["Location"] = Relationship(back_populates="inventory_sets")
     
 
 class InventoryMovement(SQLModel, table=True):
@@ -32,4 +30,4 @@ class Location(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str= Field(unique=True)
     address: str
-    inventory_sets: list["InventorySet"] = Relationship(back_populates="location")
+    inventory_sets: list["InventorySet"] = Relationship(back_populates="current_loc")

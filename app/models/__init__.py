@@ -6,8 +6,10 @@ from .surgeon import Surgeon
 from .sale import Sale
 from .product import ProductLine, Product
 from .inventory import Location, InventorySet, InventoryMovement
-from .links import SurgeonAccountLink, AccountProductPrice
+from .links import SurgeonAccountLink
 from .sale_item import SaleItem
+from .rep import Rep, SalesTeam
+from .account_product_price import AccountProductPrice
 
 __all__ = [
     "Account", 
@@ -22,4 +24,7 @@ __all__ = [
     "PurchaseOrder",
     "InventoryMovement",
     "InventorySet",
+    "Rep",
+    "SalesTeam",
+    "AccountProductPrice",
 ]

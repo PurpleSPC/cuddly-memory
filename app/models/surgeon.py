@@ -12,7 +12,7 @@ class Surgeon(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True)
     npi_no: Optional[int] = Field(unique=True)
-    surgeries = list["Sale"] = Relationship(back_populates="surgeon")
+    surgeries: list["Sale"] = Relationship(back_populates="surgeon")
     accounts: list["Account"] = Relationship(
         back_populates="surgeons", 
         link_model=SurgeonAccountLink
