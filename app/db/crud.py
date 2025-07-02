@@ -1,4 +1,5 @@
 from typing import List, Optional, Dict, Any
+from datetime import date
 from sqlmodel import select
 
 from app.db.database import get_session
@@ -6,10 +7,15 @@ from app.models import (
     Account,
     Sale, 
     SaleItem, 
+    ProductLine,
     Product, 
     Surgeon, 
     SurgeonAccountLink, 
-    AccountProductPrice)
+    AccountProductPrice,
+    SalesTeam,
+    Rep,
+    Location
+    )
 
 
 
@@ -56,22 +62,79 @@ def delete_account(account_id: int) -> bool:
         session.delete(acct)
         session.commit()
         return True
-    
+
+def get_account(account_id: int) -> Optional[Account]:
+       with get_session() as session:
+           return session.get(Account, account_id)
+
+def update_account_price(account_id:int, product_id:int, new_price:float)->AccountProductPrice:
+    with get_session() as session:
+        statement = select(AccountProductPrice).where((AccountProductPrice.product_id== product_id) & (AccountProductPrice.account_id==account_id))
+        acct_prod_price = session.exec(statement).one_or_none()
+        if acct_prod_price is None:
+            raise ValueError(f"No pricing found for account: {account_id}, catalog#: {product_id} ")
+        acct_prod_price.unit_price = new_price
+        session.add(acct_prod_price)
+        session.commit()
+        session.refresh(acct_prod_price)
+        return acct_prod_price
+        
+def set_account_prices_to_list(account_id:int, prod_line_id:int)-> List[AccountProductPrice]:
+    with get_session() as session:
+        product_prices = session.exec(select(AccountProductPrice)
+                                      .join(Product, AccountProductPrice.product)
+                                      .where(
+                                          (AccountProductPrice.account_id==account_id)&
+                                          (AccountProductPrice.product_id==prod_line_id))).all()
+        product_line = session.get(ProductLine, prod_line_id)
+        products = session.exec(select(Product)
+                                .where(Product.product_line_id==prod_line_id)).all()
+        if products == None:
+            raise ValueError(
+                f"No Products found for product line: {product_line.name}"
+            )
+        for product in products:
+            acct_price = AccountProductPrice(account_id=account_id,product_id=product.id,unit_price=product.list_price)
+            session.add(acct_price)
+        session.commit()
+
+        for price in product_prices:
+            session.refresh(price)
+        return session.exec(select(AccountProductPrice)
+                                      .join(Product, AccountProductPrice.product)
+                                      .where(
+                                          (AccountProductPrice.account_id==account_id)&
+                                          (AccountProductPrice.product_id==prod_line_id))).all()
+        
+        
+            
+
+        
+
+
+
 # 
 # SALE
 # 
 
-def create_sale(account_id: int, sale_date, total_amt: float) -> Sale:
-    with get_session() as session:
-        sale = Sale(account_id=account_id, sale_date=sale_date, total_amt=total_amt)
-        session.add(sale)
-        session.commit()
-        session.refresh(sale)
-        return sale
+# def create_sale(account_id: int, sale_date, total_amt: float) -> Sale:
+    # with get_session() as session:
+    #     sale = Sale(account_id=account_id, sale_date=sale_date, total_amt=total_amt)
+    #     session.add(sale)
+    #     session.commit()
+    #     session.refresh(sale)
+    #     return sale
 
-def create_sale_with_items(
-        account_id: int, 
+def create_sale( 
         sale_date, 
+        received_date: Optional[date],
+        account_id: int,
+        product_line_id: Optional[int],
+        surgeon_id: int,
+        rep_id: int,
+        team_id: Optional[int],
+        po_id: Optional[str],
+        rstck_loc_id: int,
         items:List[Dict[str, Any]],
         ) -> Optional[Sale]:
     """
@@ -79,9 +142,10 @@ def create_sale_with_items(
     """
     with get_session() as session:
         # create sale with a 0.0 total
-        sale = Sale(account_id=account_id, sale_date=sale_date, total_amt=0.0)
+        sale = Sale(sale_date=sale_date, received_date=received_date,account_id=account_id, procuct_line_id=product_line_id, surgeon_id=surgeon_id, rep_id=rep_id, po_id=po_id, rstck_loc_id=rstck_loc_id, total_amt=0.0)
         session.add(sale)
-        session.flush()  # assigns a sale.id
+        session.commit()
+        session.refresh(sale)  # assigns a sale.id
 
         # iterate items to get Product and AccountProductPrice
         total = 0.0
@@ -94,7 +158,7 @@ def create_sale_with_items(
             price = get_account_product_price(account_id, product.id)
             if price is None:
                 session.rollback()
-                raise ValueError(f"No pricing for account: {account_id}, product: {product.id}")
+                raise ValueError(f"No pricing for account: {account_id}, product: {product.catalog_no}")
             
             item = SaleItem(
                 sale_id=sale.id,
@@ -111,10 +175,6 @@ def create_sale_with_items(
             session.commit()
             session.refresh(sale)
             return sale
-            
-
-         
-    
     
 def get_sale(sale_id: int) -> Optional[Sale]:
     with get_session() as session:
@@ -184,6 +244,15 @@ def get_account_product_price(account_id:int, product_id:int) -> Optional[float]
 #
 # PRODUCT
 #
+
+def create_product(catalog_no: str, description:str, list_price: float, product_line_id: int) -> Product:
+    with get_session() as session:
+        product = Product(catalog_no=catalog_no, description=description, list_price=list_price, product_line_id=product_line_id)
+        session.add(product)
+        session.commit()
+        session.refresh(product)
+        return product
+
 def list_products() -> List[Product]:
     with get_session() as session:
         return session.exec(select(Product)).all()
@@ -207,7 +276,7 @@ def get_product_by_description(desc_term:str):
 # Surgeon
 # 
 
-def create_surgeon(name: str, npi_no: Optional[int]):
+def create_surgeon(name: str, npi_no: Optional[int]) -> Surgeon:
     with get_session() as session:
         surgeon = Surgeon(name=name, npi_no=npi_no)
         session.add(surgeon)
@@ -215,10 +284,56 @@ def create_surgeon(name: str, npi_no: Optional[int]):
         session.refresh(surgeon)
         return surgeon
     
-def assign_surgeon_account(surgeon_id: int, account_id: int):
+def assign_surgeon_account(surgeon_id: int, account_id: int) -> SurgeonAccountLink:
     with get_session() as session:
         surgeon_account = SurgeonAccountLink(surgeon_id=surgeon_id, account_id=account_id)
         session.add(surgeon_account)
         session.commit()
         session.refresh(surgeon_account)
         return surgeon_account
+# 
+# SalesTeam
+# 
+
+def create_sales_team(name: str) -> SalesTeam:
+    with get_session() as session:
+        team = SalesTeam(name=name)
+        session.add(team)
+        session.commit()
+        session.refresh(team)
+        return team
+
+# 
+# Rep
+# 
+
+def create_rep(name: str, team_id: Optional[int])-> Rep:
+    with get_session() as session:
+        rep = Rep(name=name, team_id=team_id)
+        session.add(rep)
+        session.commit()
+        session.refresh(rep)
+        return rep
+
+# 
+# ProductLine
+# 
+def create_product_line(name: str, commision_rate:Optional[float])-> ProductLine:
+    with get_session() as session:
+        product_line = ProductLine(name=name, commision_rate=commision_rate)
+        session.add(product_line)
+        session.commit()
+        session.refresh(product_line)
+        return product_line
+    
+# 
+# Location
+# 
+
+def create_location(name: str, address: str)-> Location:
+    with get_session() as session:
+        location = Location(name=name, address=address)
+        session.add(location)
+        session.commit()
+        session.refresh(location)
+        return location

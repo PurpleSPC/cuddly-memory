@@ -3,7 +3,7 @@ import os
 import sys
 from sqlmodel import SQLModel, create_engine, Session
 from app.db import database as db_module
-from app.models import Account, SurgeonAccountLink, Product, Sale, SaleItem
+from app.db import crud as crud_module
 
 root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if root not in sys.path:
@@ -31,3 +31,15 @@ def override_get_session(session, monkeypatch):
         "get_session",
         lambda: session
     )
+    monkeypatch.setattr(
+        crud_module, 
+        "get_session",
+        lambda: session
+        )
+
+@pytest.fixture(autouse=True)
+def reset_tables(engine):
+    SQLModel.metadata.drop_all(engine)
+    SQLModel.metadata.create_all(engine)
+    yield
+    SQLModel.metadata.drop_all(engine)

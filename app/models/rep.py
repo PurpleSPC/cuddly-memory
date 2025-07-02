@@ -17,7 +17,7 @@ class SalesTeam(SQLModel, table=True):
 class Rep(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True)
-    team_id: int = Field(foreign_key="salesteam.id")
+    team_id: Optional[int] = Field(foreign_key="salesteam.id")
     team: "SalesTeam" = Relationship(back_populates="reps")
     sales: list["Sale"] = Relationship(back_populates="rep")
     

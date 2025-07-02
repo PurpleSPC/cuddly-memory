@@ -23,7 +23,7 @@ class Sale(SQLModel, table=True):
     rep_id: int = Field(foreign_key="rep.id")
     po_id: Optional[int] = Field(foreign_key="purchaseorder.id")
     rstck_loc_id: int = Field(foreign_key="location.id")
-    total_amt: float
+    total_amt: Optional[float]
     items: list["SaleItem"] = Relationship(back_populates="sale")
     sales_team_id: Optional[int] = Field(foreign_key="salesteam.id")
     sales_team: Optional["SalesTeam"] = Relationship(back_populates="sales")
