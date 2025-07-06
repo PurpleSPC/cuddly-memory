@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any
 from datetime import date
 from sqlmodel import select
+from sqlalchemy.exc import IntegrityError
 
 from app.db.database import get_session
 from app.models import (
@@ -44,7 +45,7 @@ def update_account(account_id: int, name: Optional[str] = None, address: Optiona
     with get_session() as session:
         acct = session.get(Account, account_id)
         if not acct:
-            return None
+            raise ValueError(f"No account exists in db with id: {account_id}")
         if name is not None:
             acct.name = name
         if address is not None:
@@ -65,7 +66,11 @@ def delete_account(account_id: int) -> bool:
 
 def get_account(account_id: int) -> Optional[Account]:
        with get_session() as session:
-           return session.get(Account, account_id)
+           account = session.get(Account, account_id)
+           if account == None:
+               raise ValueError(f"No account exists for id: {account_id}")
+           else:
+               return account
 
 def update_account_price(account_id:int, product_id:int, new_price:float)->AccountProductPrice:
     with get_session() as session:
@@ -106,12 +111,6 @@ def set_account_prices_to_list(account_id:int, prod_line_id:int)-> List[AccountP
                                           (AccountProductPrice.account_id==account_id)&
                                           (AccountProductPrice.product_id==prod_line_id))).all()
         
-        
-            
-
-        
-
-
 
 # 
 # SALE
@@ -276,22 +275,68 @@ def get_product_by_description(desc_term:str):
 # Surgeon
 # 
 
+def get_surgeon(surgeon_id:int) -> Surgeon:
+    with get_session() as session:
+        surgeon = session.get(Surgeon, surgeon_id)
+        if surgeon is not None:
+            return surgeon
+        else:
+            raise ValueError(f"No surgeon exists in db with id: {surgeon_id}")
+    
 def create_surgeon(name: str, npi_no: Optional[int]) -> Surgeon:
     with get_session() as session:
         surgeon = Surgeon(name=name, npi_no=npi_no)
-        session.add(surgeon)
-        session.commit()
-        session.refresh(surgeon)
-        return surgeon
-    
+        try:
+            session.add(surgeon)
+            session.commit()
+            session.refresh(surgeon)
+            return surgeon
+        except IntegrityError:
+            session.rollback()
+            raise ValueError(f"Surgeon {surgeon.name} already exists in db")
+
 def assign_surgeon_account(surgeon_id: int, account_id: int) -> SurgeonAccountLink:
     with get_session() as session:
-        surgeon_account = SurgeonAccountLink(surgeon_id=surgeon_id, account_id=account_id)
-        session.add(surgeon_account)
-        session.commit()
-        session.refresh(surgeon_account)
-        return surgeon_account
-# 
+        surgeon = get_surgeon(surgeon_id)
+        account = get_account(account_id)
+        surgeon_acct = SurgeonAccountLink(surgeon_id=surgeon_id,account_id=account_id)
+        try:    
+            session.add(surgeon_acct)
+            session.commit()
+            session.refresh(surgeon_acct)
+            return surgeon_acct
+        except IntegrityError:
+            raise ValueError(f"Surgeon {surgeon.name} is already linked with account {account.name}")
+    
+def assign_surgeon_npi(surgeon_id:int, npi_no: int) -> Surgeon:
+    with get_session() as session:
+        surgeon = get_surgeon(surgeon_id)
+        if surgeon == None:
+            raise ValueError(f"No surgeon exists in db with id: {surgeon_id}")
+        if npi_no is not None:
+            try:
+                surgeon.npi_no = npi_no
+                session.add(surgeon)
+                session.commit()
+                session.refresh(surgeon)
+                return surgeon
+            except IntegrityError:
+                session.rollback()
+                raise ValueError(f"NPI Number {npi_no} is already assigned to surgeon {surgeon.id}")
+        else:
+            raise ValueError("Invalid NPI # entry, try again")
+
+def list_surgeon_accounts(surgeon_id:int) -> List[Account]:
+    with get_session() as session:
+        surgeon = session.get(Surgeon, surgeon_id)
+        if surgeon is not None:
+            return surgeon.accounts
+        else:
+            raise ValueError((f"No surgeon exists in db with id: {surgeon_id}"))
+        
+
+
+#       
 # SalesTeam
 # 
 
