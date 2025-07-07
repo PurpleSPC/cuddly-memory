@@ -27,11 +27,15 @@ from app.models import (
 def create_account(name: str, address: Optional[str] = None)-> Account:
     with get_session() as session:
         acct = Account(name=name, address=address)
-        session.add(acct)
-        session.commit()
-        session.refresh(acct)
-        return acct
-
+        try:
+            session.add(acct)
+            session.commit()
+            session.refresh(acct)
+            return acct
+        except IntegrityError:
+            session.rollback()
+            raise ValueError(f"Account {acct.name} already exists in db")
+        
 def list_accounts() -> List[Account]:
     with get_session() as session:
         return session.exec(select(Account)).all()
