@@ -1,12 +1,14 @@
 from typing import List, Optional, Dict, Any
 from datetime import date
 from sqlmodel import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 
 from app.db.database import get_session
 from app.models import (
     Account,
     Sale, 
-    SaleItem, 
+    SaleItem,
     ProductLine,
     Product, 
     Surgeon, 
@@ -26,11 +28,15 @@ from app.models import (
 def create_account(name: str, address: Optional[str] = None)-> Account:
     with get_session() as session:
         acct = Account(name=name, address=address)
-        session.add(acct)
-        session.commit()
-        session.refresh(acct)
-        return acct
-
+        try:
+            session.add(acct)
+            session.commit()
+            session.refresh(acct)
+            return acct
+        except IntegrityError:
+            session.rollback()
+            raise ValueError(f"Account {acct.name} already exists in db")        
+        
 def list_accounts() -> List[Account]:
     with get_session() as session:
         return session.exec(select(Account)).all()
@@ -44,7 +50,7 @@ def update_account(account_id: int, name: Optional[str] = None, address: Optiona
     with get_session() as session:
         acct = session.get(Account, account_id)
         if not acct:
-            return None
+            raise ValueError(f"No account exists in db with id: {account_id}")
         if name is not None:
             acct.name = name
         if address is not None:
@@ -65,15 +71,27 @@ def delete_account(account_id: int) -> bool:
 
 def get_account(account_id: int) -> Optional[Account]:
        with get_session() as session:
-           return session.get(Account, account_id)
+           account = session.get(Account, account_id)
+           if account == None:
+               raise ValueError(f"No account exists for id: {account_id}")
+           else:
+               return account
 
-def update_account_price(account_id:int, product_id:int, new_price:float)->AccountProductPrice:
+def update_account_price(account_id:int, 
+                         product_id:int, 
+                         new_price:float
+                         )->AccountProductPrice:
     with get_session() as session:
         statement = select(AccountProductPrice).where((AccountProductPrice.product_id== product_id) & (AccountProductPrice.account_id==account_id))
         acct_prod_price = session.exec(statement).one_or_none()
         if acct_prod_price is None:
-            raise ValueError(f"No pricing found for account: {account_id}, catalog#: {product_id} ")
-        acct_prod_price.unit_price = new_price
+            acct_prod_price = AccountProductPrice(
+                account_id=account_id,
+                product_id=product_id,
+                unit_price=new_price
+            )
+        else:
+            acct_prod_price.unit_price = new_price
         session.add(acct_prod_price)
         session.commit()
         session.refresh(acct_prod_price)
@@ -106,24 +124,10 @@ def set_account_prices_to_list(account_id:int, prod_line_id:int)-> List[AccountP
                                           (AccountProductPrice.account_id==account_id)&
                                           (AccountProductPrice.product_id==prod_line_id))).all()
         
-        
-            
-
-        
-
-
 
 # 
 # SALE
 # 
-
-# def create_sale(account_id: int, sale_date, total_amt: float) -> Sale:
-    # with get_session() as session:
-    #     sale = Sale(account_id=account_id, sale_date=sale_date, total_amt=total_amt)
-    #     session.add(sale)
-    #     session.commit()
-    #     session.refresh(sale)
-    #     return sale
 
 def create_sale( 
         sale_date, 
@@ -132,53 +136,23 @@ def create_sale(
         product_line_id: Optional[int],
         surgeon_id: int,
         rep_id: int,
-        team_id: Optional[int],
-        po_id: Optional[str],
         rstck_loc_id: int,
-        items:List[Dict[str, Any]],
         ) -> Optional[Sale]:
-    """
-    items: [{"catalog_no":str,"qty":int}, ...]
-    """
     with get_session() as session:
         # create sale with a 0.0 total
-        sale = Sale(sale_date=sale_date, received_date=received_date,account_id=account_id, procuct_line_id=product_line_id, surgeon_id=surgeon_id, rep_id=rep_id, po_id=po_id, rstck_loc_id=rstck_loc_id, total_amt=0.0)
+        sale = Sale(sale_date=sale_date, received_date=received_date,account_id=account_id, procuct_line_id=product_line_id, surgeon_id=surgeon_id, rep_id=rep_id, rstck_loc_id=rstck_loc_id, total_amt=0.0)
         session.add(sale)
         session.commit()
         session.refresh(sale)  # assigns a sale.id
-
-        # iterate items to get Product and AccountProductPrice
-        total = 0.0
-        for row in items:
-            product = session.exec(select(Product).where(Product.catalog_no == row["catalog_no"])).first()
-            if not product:
-                session.rollback()
-                raise ValueError(f"Unknown catalog number: {row['catalog_no']}")
-            
-            price = get_account_product_price(account_id, product.id)
-            if price is None:
-                session.rollback()
-                raise ValueError(f"No pricing for account: {account_id}, product: {product.catalog_no}")
-            
-            item = SaleItem(
-                sale_id=sale.id,
-                product_id=product.id,
-                qty=row["qty"],
-                unit_price=price,
-            )
-            item.line_total = round(item.qty * item.unit_price, 2)
-            total += item.line_total
-            session.add(item)
-
-            sale.total_amt = round(total, 2)
-            session.add(sale)
-            session.commit()
-            session.refresh(sale)
-            return sale
+        return sale
     
 def get_sale(sale_id: int) -> Optional[Sale]:
     with get_session() as session:
-        return session.get(Sale, sale_id)
+        sale = session.get(Sale, sale_id)
+        if sale is not None:
+            return sale
+        else:
+            raise ValueError(f"Sale ID#{sale_id} was not located in db")
     
 def list_sales() -> List[Sale]:
      with get_session() as session:
@@ -209,14 +183,42 @@ def delete_sale(sale_id:int) -> bool:
 # SALE ITEM
 # 
 
-# need to integrate product and/or account_prod_price 
-def add_item_to_sale(sale_id: int, product_id: int, qty: int, unit_price: float) -> SaleItem:
+def add_item_to_sale(sale_id: int, product_id: int, qty: int, unit_price:Optional[float]) -> List[SaleItem]:
          with get_session() as session:
-            item = SaleItem(sale_id=sale_id, product_id=product_id, qty=qty, unit_price=unit_price)
-            session.add(item)
+            sale = session.exec(select(Sale).options(selectinload(Sale.items)).where(Sale.id == sale_id)).first()
+            if not sale:
+                return None
+            account_id = sale.account_id
+            if not unit_price:
+                unit_price = get_account_product_price(account_id,product_id)
+
+            existing = session.exec(
+                select(SaleItem).where(
+                    SaleItem.sale_id == sale_id,
+                    SaleItem.product_id == product_id
+                )
+            ).first()
+            if existing:
+                existing.qty = qty
+                existing.unit_price = unit_price
+                session.add(existing)
+            else:
+                item = SaleItem(sale_id=sale_id, 
+                            product_id=product_id, 
+                            qty=qty, 
+                            unit_price=unit_price
+                            )
+                session.add(item)
             session.commit()
-            session.refresh(item)
-            return item
+
+            hydrated_sale = session.exec(select(Sale).options(selectinload(Sale.items)).where(Sale.id == sale_id)).first()
+            hydrated_sale.total_amt = update_sale_total(sale_id)
+
+            session.add(hydrated_sale)
+            session.commit()
+
+            full_hydrated_sale = session.exec(select(Sale).options(selectinload(Sale.items)).where(Sale.id == sale_id)).first()
+            return full_hydrated_sale.items
 
 def list_items_for_sale(sale_id: int) -> List[SaleItem]:
     with get_session() as session:
@@ -239,7 +241,25 @@ def get_account_product_price(account_id:int, product_id:int) -> Optional[float]
             (AccountProductPrice.product_id == product_id)
         )
         result = session.exec(statement).first()
-        return result.unit_price if result else None
+        if result:  
+            return result.unit_price
+        else:
+            return session.exec(select(Product).where(Product.id == product_id)).first().list_price
+
+def update_sale_total(sale_id:int) -> float:
+    with get_session() as session:
+        sale = session.exec(select(Sale).options(selectinload(Sale.items)).where(Sale.id == sale_id)
+                            ).first()
+        items = sale.items
+        sale_total = 0.0
+
+        for row in items:
+            price = row.unit_price
+            qty = row.qty
+            line_total = round(price * qty, 2)
+            sale_total += line_total
+        
+        return sale_total
 
 #
 # PRODUCT
@@ -276,22 +296,68 @@ def get_product_by_description(desc_term:str):
 # Surgeon
 # 
 
+def get_surgeon(surgeon_id:int) -> Surgeon:
+    with get_session() as session:
+        surgeon = session.get(Surgeon, surgeon_id)
+        if surgeon is not None:
+            return surgeon
+        else:
+            raise ValueError(f"No surgeon exists in db with id: {surgeon_id}")
+    
 def create_surgeon(name: str, npi_no: Optional[int]) -> Surgeon:
     with get_session() as session:
         surgeon = Surgeon(name=name, npi_no=npi_no)
-        session.add(surgeon)
-        session.commit()
-        session.refresh(surgeon)
-        return surgeon
-    
+        try:
+            session.add(surgeon)
+            session.commit()
+            session.refresh(surgeon)
+            return surgeon
+        except IntegrityError:
+            session.rollback()
+            raise ValueError(f"Surgeon {surgeon.name} already exists in db")
+
 def assign_surgeon_account(surgeon_id: int, account_id: int) -> SurgeonAccountLink:
     with get_session() as session:
-        surgeon_account = SurgeonAccountLink(surgeon_id=surgeon_id, account_id=account_id)
-        session.add(surgeon_account)
-        session.commit()
-        session.refresh(surgeon_account)
-        return surgeon_account
-# 
+        surgeon = get_surgeon(surgeon_id)
+        account = get_account(account_id)
+        surgeon_acct = SurgeonAccountLink(surgeon_id=surgeon_id,account_id=account_id)
+        try:    
+            session.add(surgeon_acct)
+            session.commit()
+            session.refresh(surgeon_acct)
+            return surgeon_acct
+        except IntegrityError:
+            raise ValueError(f"Surgeon {surgeon.name} is already linked with account {account.name}")
+    
+def assign_surgeon_npi(surgeon_id:int, npi_no: int) -> Surgeon:
+    with get_session() as session:
+        surgeon = get_surgeon(surgeon_id)
+        if surgeon == None:
+            raise ValueError(f"No surgeon exists in db with id: {surgeon_id}")
+        if npi_no is not None:
+            try:
+                surgeon.npi_no = npi_no
+                session.add(surgeon)
+                session.commit()
+                session.refresh(surgeon)
+                return surgeon
+            except IntegrityError:
+                session.rollback()
+                raise ValueError(f"NPI Number {npi_no} is already assigned to surgeon {surgeon.id}")
+        else:
+            raise ValueError("Invalid NPI # entry, try again")
+
+def list_surgeon_accounts(surgeon_id:int) -> List[Account]:
+    with get_session() as session:
+        surgeon = session.get(Surgeon, surgeon_id)
+        if surgeon is not None:
+            return surgeon.accounts
+        else:
+            raise ValueError((f"No surgeon exists in db with id: {surgeon_id}"))
+        
+
+
+#       
 # SalesTeam
 # 
 

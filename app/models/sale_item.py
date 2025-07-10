@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING
+from pydantic import BaseModel
 from app.models.common import SQLModel, Field, Relationship
 
 if TYPE_CHECKING:
     from .sale import Sale
-    from.product import Product
 
 
 class SaleItem(SQLModel, table=True):
@@ -15,7 +15,7 @@ class SaleItem(SQLModel, table=True):
     line_total: float = Field(default=0.00, ge=0.00)
     
     sale: "Sale" = Relationship(back_populates="items")
-    product: "Product" = Relationship()
 
     def compute_line_total(self) -> float:
         return round(self.qty * self.unit_price, 2)
+

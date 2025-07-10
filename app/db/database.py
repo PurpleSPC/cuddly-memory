@@ -1,9 +1,15 @@
 # db utilities and session management
 from sqlmodel import SQLModel, create_engine, Session
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 # creating db
-sqlite_file_name = "database.db"
-DATABASE_URL = f"sqlite:///{sqlite_file_name}"
+DATABASE_URL = (
+    f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASS')}"
+    f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+)
+
 engine = create_engine(DATABASE_URL, echo=True)
 
 # initialize tables
@@ -12,4 +18,5 @@ def init_db():
 
 # get session
 def get_session():
-    return Session(engine)
+    with Session(engine) as session:
+        yield session

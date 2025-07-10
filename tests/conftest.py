@@ -1,13 +1,21 @@
 import pytest
 import os
 import sys
+from fastapi.testclient import TestClient
 from sqlmodel import SQLModel, create_engine, Session
-from app.db import database as db_module
+from main import app
+from app.db.database import get_session
 from app.db import crud as crud_module
+from app.db import database as db_module
 
 root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if root not in sys.path:
     sys.path.insert(0,root)
+
+@pytest.fixture
+def client(session):
+    app.dependency_overrides[get_session] = lambda: session
+    return TestClient(app)
 
 @pytest.fixture(scope="session")
 def engine():
@@ -16,7 +24,7 @@ def engine():
     SQLModel.metadata.create_all(eng)
     return eng
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def session(engine):
     with Session(engine) as sess:
         yield sess

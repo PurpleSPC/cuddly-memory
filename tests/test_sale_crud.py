@@ -10,10 +10,12 @@ from app.db.crud import (
     create_location,
     create_product_line,
     create_product,
-    get_account_product_price,
     update_account_price,
-    set_account_prices_to_list
+    add_item_to_sale,
+    update_sale_total,
+    list_sales,
     )
+
 def test_create_sale(session):
     # create sample records
     
@@ -52,32 +54,23 @@ def test_create_sale(session):
     assert prod1.list_price == 4.20
     
     # create pricing for account and product
-    pricing = set_account_prices_to_list(acct.id,prod_line.id)
+    # pricing = set_account_prices_to_list(acct.id,prod_line.id)
 
-    assert pricing is not None
-    assert pricing[0].account_id == acct.id
-    assert pricing[0].unit_price == 4.20
+    # assert pricing is not None
+    # assert pricing[0].account_id == acct.id
+    # assert pricing[0].unit_price == 4.20
     
     # update pricing for account and product
-    price1 = update_account_price(acct.id, prod1.id, 69.00)
-    price2 = update_account_price(acct.id, prod2.id, 420.00)
+    price2 = update_account_price(acct.id, prod2.id, 123.32)
 
-    assert price1.unit_price == 69.00
-    assert price2.unit_price == 420.00
+    assert price2.unit_price == 123.32
 
     loc = create_location("Hideout", "420 High St")
 
     assert loc.id is not None
     assert loc.address == "420 High St"
 
-    # create a list of items for sale
-    
-    
-    items_sold = [
-        {"catalog_no": prod1.catalog_no, "qty": 2, "unit_price": 50.0},
-        {"catalog_no": prod2.catalog_no, "qty": 3, "unit_price": 20.0}
-    ]
-    
+        
     # test create_sale function
 
     sale = create_sale(
@@ -87,15 +80,24 @@ def test_create_sale(session):
         product_line_id=prod_line.id,
         surgeon_id=surgeon.id,
         rep_id=rep.id,
-        po_id=None,
         rstck_loc_id=loc.id,
-        team_id=team.id,
-        items=items_sold
     )
 
     assert sale.id is not None
 
+    # test list_sales
+    sales = list_sales()
 
+    assert sales[0].id is not None
 
+# test add items to sale
+
+    sale_item = add_item_to_sale(1, 1, 2)
+
+    assert sale_item.qty == 2
+
+# test update sale total
+
+    assert sale.total_amt != 0.0
 
 

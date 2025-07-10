@@ -1,6 +1,5 @@
 import pytest
 from datetime import date
-from sqlmodel import select
 
 from app.db.crud import (
     create_account, 
@@ -46,6 +45,9 @@ def test_account_crud(session):
     # delete
 
     delete_account(acct.id)
-    assert get_account(acct.id) is None
+    with pytest.raises(ValueError) as exc_info:
+        get_account(acct.id) 
+    
+    assert "No account exists" in str(exc_info.value)
 
 
