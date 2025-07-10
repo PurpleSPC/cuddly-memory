@@ -76,6 +76,12 @@ class SaleItemCreate(BaseModel):
     qty: int
     unit_price: float | None
 
+class SaleItemResponse(BaseModel):
+    sale_id: int
+    product_id: int
+    qty: int
+    unit_price: float
+
 @router.post("/surgeons/create")
 def create_surgeon_endpoint(data: SurgeonCreate):
     try:
@@ -199,10 +205,10 @@ def create_location_endpoint(data: LocationCreate):
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
 
-@router.post("/sales/add")
+@router.post("/sales/add", response_model=List[SaleItemResponse])
 def add_items_to_sale_endpoint(sale_id, data: SaleItemCreate):
     try:
-        add_item = add_item_to_sale(sale_id, data.product_id, data.qty)
+        add_item = add_item_to_sale(sale_id, data.product_id, data.qty, data.unit_price)
         return add_item
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))

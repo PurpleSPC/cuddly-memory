@@ -183,13 +183,14 @@ def delete_sale(sale_id:int) -> bool:
 # SALE ITEM
 # 
 
-def add_item_to_sale(sale_id: int, product_id: int, qty: int) -> Optional[Sale]:
+def add_item_to_sale(sale_id: int, product_id: int, qty: int, unit_price:Optional[float]) -> List[SaleItem]:
          with get_session() as session:
             sale = session.exec(select(Sale).options(selectinload(Sale.items)).where(Sale.id == sale_id)).first()
             if not sale:
                 return None
             account_id = sale.account_id
-            unit_price = get_account_product_price(account_id,product_id)
+            if not unit_price:
+                unit_price = get_account_product_price(account_id,product_id)
 
             existing = session.exec(
                 select(SaleItem).where(
@@ -198,7 +199,7 @@ def add_item_to_sale(sale_id: int, product_id: int, qty: int) -> Optional[Sale]:
                 )
             ).first()
             if existing:
-                existing.qty += qty
+                existing.qty = qty
                 existing.unit_price = unit_price
                 session.add(existing)
             else:
@@ -217,8 +218,7 @@ def add_item_to_sale(sale_id: int, product_id: int, qty: int) -> Optional[Sale]:
             session.commit()
 
             full_hydrated_sale = session.exec(select(Sale).options(selectinload(Sale.items)).where(Sale.id == sale_id)).first()
-            return full_hydrated_sale
-         
+            return full_hydrated_sale.items
 
 def list_items_for_sale(sale_id: int) -> List[SaleItem]:
     with get_session() as session:
