@@ -1,6 +1,7 @@
 # db utilities and session management
 from sqlmodel import SQLModel, create_engine, Session
 from dotenv import load_dotenv
+from contextlib import contextmanager
 import os
 
 load_dotenv()
@@ -17,6 +18,7 @@ def init_db():
     SQLModel.metadata.create_all(engine)
 
 # get session
+@contextmanager
 def get_session():
     with Session(engine) as session:
         yield session
