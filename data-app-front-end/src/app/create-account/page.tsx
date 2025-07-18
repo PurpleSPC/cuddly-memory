@@ -1,5 +1,7 @@
 "use client";
 
+import PageLayout from "../../../components/PageLayout";    
+
 import { useState } from "react"
 
 interface CreateAccountForm {
@@ -48,18 +50,34 @@ export default function CreateAccountPage() {
     }
     
     return (
-        <main>
-            <h1>Create Account</h1>
-            <form onSubmit={handleSubmit}>
-                <input name="name" placeholder="Name" value={form.name} onChange={handleChange} />
-                <input name="address" placeholder="Address" value={form.address} onChange={handleChange} />
-                <button type="submit" disabled={isSubmitting}>
+        <PageLayout>
+            <h1 className="text-2xl font-bold mb-6">Create Account</h1>
+            <form className="flex flex-col space-y-4" onSubmit={handleSubmit}>
+                <input 
+                    className="border border-gray-300 rounded px-4 py-2 foucus:outline-none focus:ring-blue-500"
+                    name="name" 
+                    placeholder="Name" 
+                    value={form.name} 
+                    onChange={handleChange} />
+                <input 
+                    className="border border-gray-300 rounded px-4 py-2 foucus:outline-none focus:ring-blue-500"
+                    name="address" 
+                    placeholder="Address" 
+                    value={form.address} 
+                    onChange={handleChange} />
+                <button 
+                    className={`py-2 px-4 rounded text-white ${
+                        isSubmitting? "bg-blue=300 cursor-not-allowed": "bg-blue-600 hover:bg-blue-700"
+                    }`}
+                    type="submit" 
+                    disabled={isSubmitting}>
                     {isSubmitting ? "Creating..." : "Create Account"} 
                 </button>
             </form>
+
             {/* Feedback Messages */}
-            {success && <p style={{color: "green"}}>✅ Account created successfully!</p>}
-            {error && <p style={{color:"red"}}>❌ Something went wrong. Try again.</p>}
-        </main>
+            {success && <p className="text-green-600 mt-4">✅ Account created successfully!</p>}
+            {error && <p className="text-red-600 mt-4">❌ Something went wrong. Try again.</p>}
+        </PageLayout>
     );
 }
