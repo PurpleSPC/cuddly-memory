@@ -1,6 +1,9 @@
 "use client";
 
 import PageLayout from "../../../components/PageLayout";    
+import FormLayout from "../../../components/FormLayout";
+import SubmitButton from "../../../components/SubmitButton";
+import FormField from "../../../components/FormField";
 
 import { useState } from "react"
 
@@ -51,29 +54,14 @@ export default function CreateAccountPage() {
     
     return (
         <PageLayout>
-            <h1 className="text-2xl font-bold mb-6">Create Account</h1>
-            <form className="flex flex-col space-y-4" onSubmit={handleSubmit}>
-                <input 
-                    className="border border-gray-300 rounded px-4 py-2 foucus:outline-none focus:ring-blue-500"
-                    name="name" 
-                    placeholder="Name" 
-                    value={form.name} 
-                    onChange={handleChange} />
-                <input 
-                    className="border border-gray-300 rounded px-4 py-2 foucus:outline-none focus:ring-blue-500"
-                    name="address" 
-                    placeholder="Address" 
-                    value={form.address} 
-                    onChange={handleChange} />
-                <button 
-                    className={`py-2 px-4 rounded text-white ${
-                        isSubmitting? "bg-blue=300 cursor-not-allowed": "bg-blue-600 hover:bg-blue-700"
-                    }`}
-                    type="submit" 
-                    disabled={isSubmitting}>
-                    {isSubmitting ? "Creating..." : "Create Account"} 
-                </button>
-            </form>
+            <h1 className="text-2xl font-bold mb-6 mx-auto">Create Account</h1>
+            <FormLayout title="Create Account" onSubmit={handleSubmit}>
+                <FormField label="name" name="name" value={form.name} onChange={handleChange} />
+                <FormField label="address" name="address" value={form.address} onChange={handleChange} />
+                <SubmitButton loading={isSubmitting} className="mt-4">
+                    Create Account
+                </SubmitButton>
+            </FormLayout>
 
             {/* Feedback Messages */}
             {success && <p className="text-green-600 mt-4">✅ Account created successfully!</p>}
