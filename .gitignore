@@ -13,3 +13,6 @@ __pycache__/
 
 # Ignore node modules
 node_modules/
+
+# Ignore next.js modules
+.next

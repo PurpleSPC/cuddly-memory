@@ -15,7 +15,8 @@ from app.db.crud import (create_surgeon,
                          create_product_line,
                          create_rep,
                          create_location,
-                         add_item_to_sale
+                         add_item_to_sale,
+                         list_accounts,
                          )
 from app.models import (Surgeon,
                         Account,
@@ -82,6 +83,9 @@ class SaleItemResponse(BaseModel):
     qty: int
     unit_price: float
 
+# 
+# SURGEONS
+# 
 @router.post("/surgeons/create")
 def create_surgeon_endpoint(data: SurgeonCreate):
     try:
@@ -138,6 +142,9 @@ def assign_surgeon_acct_endpoint(data: SurgeonACCTUpdate):
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
 
+# 
+# ACCOUNTS
+# 
 @router.post("/accounts/create")
 def create_account_endpoint(data: AccountCreate):
     try:
@@ -145,7 +152,12 @@ def create_account_endpoint(data: AccountCreate):
         return account
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
-    
+
+@router.get("/accounts/list")
+def list_accounts_endpoint():
+        accounts = list_accounts()
+        return accounts
+
 @router.get("/accounts/search", response_model=List[Account])
 def search_account_endpoint(
     name: Optional[str] = Query(None, min_length=2),
@@ -166,42 +178,14 @@ def update_account_endpoint(data: Account):
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
     
+# 
+# SALES
+# 
 @router.post("/sales/create")
 def create_sale_endpoint(data: SaleCreate):
     try:
         sale = create_sale(data.sale_date,data.received_date,data.account_id,data.product_line_id,data.surgeon_id,data.rep_id,data.rstck_loc_id)
         return sale
-    except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
-    
-@router.post("/products/create")
-def create_product_endpoint(data: ProductCreate):
-    try: 
-        product = create_product(data.catalog_no,data.description,data.list_price,data.product_line_id)
-        return product
-    except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
-
-@router.post("/productlines/create")
-def create_prod_line_endpoint(data: ProductLineCreate):
-    try:
-        prod_line = create_product_line(data.name, data.commission_rate)
-        return prod_line
-    except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
-    
-@router.post("/reps/create")
-def create_rep_endpoint(data: RepCreate):
-    try:
-        rep = create_rep(data.name, data.team_id)
-        return rep
-    except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
-    
-@router.post("/locations/create")
-def create_location_endpoint(data: LocationCreate):
-    try:
-        return create_location(data.name,data.address)
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
 
@@ -212,3 +196,47 @@ def add_items_to_sale_endpoint(sale_id, data: SaleItemCreate):
         return add_item
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
+  
+# 
+# PRODUCTS
+# 
+@router.post("/products/create")
+def create_product_endpoint(data: ProductCreate):
+    try: 
+        product = create_product(data.catalog_no,data.description,data.list_price,data.product_line_id)
+        return product
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+# 
+# PRODUCT LINES
+# 
+@router.post("/productlines/create")
+def create_prod_line_endpoint(data: ProductLineCreate):
+    try:
+        prod_line = create_product_line(data.name, data.commission_rate)
+        return prod_line
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    
+# 
+# REPS
+# 
+@router.post("/reps/create")
+def create_rep_endpoint(data: RepCreate):
+    try:
+        rep = create_rep(data.name, data.team_id)
+        return rep
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    
+# 
+# LOCATIONS
+# 
+@router.post("/locations/create")
+def create_location_endpoint(data: LocationCreate):
+    try:
+        return create_location(data.name,data.address)
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
