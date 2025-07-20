@@ -83,7 +83,7 @@ export default function CreateAccountPage() {
             <h1 className="text-2xl font-bold mb-6 mx-auto">Create Account</h1>
             <FormLayout title="Create Account" onSubmit={handleSubmit}>
                 <FormField 
-                    label="name" 
+                    label="Name" 
                     name="name" 
                     value={form.name} 
                     onChange={handleChange}
@@ -91,7 +91,7 @@ export default function CreateAccountPage() {
                     helperText="Enter Account Name"    
                 />
                 <FormField 
-                    label="address" 
+                    label="Address" 
                     name="address" 
                     value={form.address} 
                     onChange={handleChange} 
