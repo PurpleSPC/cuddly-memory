@@ -1,17 +1,30 @@
+"use client";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+
   return (
-    <aside className="w-64 h-screen bg-primary text-text flex flex-col">
-      <div className="px-6 py-4 font-bold text-xl">📦 Data App</div>
+    <aside className={`h-screen bg-primary text-surface transition-all duration-300 ${collapsed ? "w-16" : "w-64"}`}>
+      <div className="flex items-center justify-between px-4 py-4">
+        {!collapsed && <span className="text-xl font-bold">PurpleSPaCe</span>}
+        <button onClick={() => setCollapsed(!collapsed)} className="text-accent">
+          {collapsed ? "expand" : "collapse"}
+        </button>
+      </div>
 
-      <nav className="flex flex-col space-y-2 px-6 mt-4">
-        <Link href="/dashboard" className="hover:text-accent">Dashboard</Link>
-        <Link href="/create-account" className="hover:text-accent">Create Account</Link>
-        <Link href="/settings" className="hover:text-accent">Settings</Link>
+      <nav className="mt-4 space-y-4 px-4">
+        <Link href="/dashboard" className="block text-surface hover:text-accent">
+          {!collapsed ? "Dashboard" : "📊"}
+        </Link>
+        <Link href="/create-account" className="block text-surface hover:text-accent">
+          {!collapsed ? "Create Account" : "➕"}
+        </Link>
+        <Link href="/settings" className="block text-surface hover:text-accent">
+          {!collapsed ? "Settings" : "⚙️"}
+        </Link>
       </nav>
-
-      {/* Future: Avatar, Collapse Button, Theme Toggle */}
     </aside>
   );
 }

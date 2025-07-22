@@ -18,12 +18,20 @@
   --color-muted: #9882AC;
   --color-danger: #DC2626;
   --color-success: #16A34A;
+  --color-darkbg: #0F0F1A;
+  --color-darksurface: #1F1B2E;
+  --color-darkprimary: #8F4BD8;
+  --color-darkaccent: #B580F6;
+  --color-darkmuted: #A89BC4;
+  --color-darktext: #E1D9F5;
+  --color-darkborder: #3A345B;
+  --color-darkhighlight: #C084FC; 
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0F0F1A;
+    --foreground: #E1D9F5;
   }
 }
 

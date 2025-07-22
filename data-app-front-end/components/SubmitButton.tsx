@@ -19,8 +19,8 @@ export default function SubmitButton({
         <button
             type={type}
             disabled={disabled || loading}
-            className={`py-2 px-4 rounded text-text transition ${
-                loading ? "bg-muted cursor-not-allowed" : "bg-primary hover:bg-accent"
+            className={`py-2 px-4 rounded text-surface transition ${
+                loading ? "bg-muted dark:bg-darkmuted cursor-not-allowed" : "bg-primary hover:bg-accent dark:bg-darkprimary dark:hover:bg-darkaccent"
             } ${className}`}
         >
             {loading ? "Submitting..." : children}

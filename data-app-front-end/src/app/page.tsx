@@ -1,3 +1,9 @@
+import PageLayout from "../../components/PageLayout"
+
 export default function HomePage() {
-  return <h1>Welcome to my data-app</h1>
+  return(
+    <PageLayout>
+      <h1 className="text-text">Welcome To My App</h1>
+    </PageLayout>
+  )
 }
