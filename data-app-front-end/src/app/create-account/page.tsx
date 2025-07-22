@@ -1,9 +1,9 @@
 "use client";
 
-import PageLayout from "../../../components/PageLayout";    
-import FormLayout from "../../../components/FormLayout";
-import SubmitButton from "../../../components/SubmitButton";
 import FormField from "../../../components/FormField";
+import { useFormState } from "../hooks/useFormState";
+import { useValidation } from "../hooks/useValidation";
+import FormPage from "../../../components/FormPage";
 
 import { useState } from "react"
 
@@ -21,36 +21,20 @@ const createAccountSchema = z.object({
 })
 
 export default function CreateAccountPage() {
-    const [form, setForm] = useState<CreateAccountForm>({
+    const {form, setForm, handleChange} = useFormState({
         name: "",
         address: "",
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
-    const [errors, setErrors] = useState<{ [key:string]: string}>({}); // uses formErrors from validation function
+    const [errors, setErrors] = useState<Record<string, string>>({}); 
     const [error, setError] = useState(false);
 
+    const validate = useValidation(createAccountSchema)
     
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setForm({ ...form, [e.target.name]: e.target.value});
-    };
-    
-    // Validation function from schema
-    const validateForm = () => {
-        const result = createAccountSchema.safeParse(form);
-        if (!result.success) {
-            const formErrors : Record<string, string> = {};
-            for (const issue of result.error.issues) {
-                formErrors[String(issue.path[0])] = issue.message;
-            }
-            return formErrors;
-        }
-        return {};
-    };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const formErrors = validateForm();
+        const formErrors = validate(form);
         if (Object.keys(formErrors).length > 0) {
             setErrors(formErrors);
             return;
@@ -79,33 +63,31 @@ export default function CreateAccountPage() {
     }
     
     return (
-        <PageLayout>
-            <h1 className="text-2xl font-bold mb-6 mx-auto">Create Account</h1>
-            <FormLayout title="Create Account" onSubmit={handleSubmit}>
-                <FormField 
-                    label="Name" 
-                    name="name" 
-                    value={form.name} 
-                    onChange={handleChange}
-                    error={errors.name}
-                    helperText="Enter Account Name"    
-                />
-                <FormField 
-                    label="Address" 
-                    name="address" 
-                    value={form.address} 
-                    onChange={handleChange} 
-                    error={errors.name}
-                    helperText="Enter account address"
-                />
-                <SubmitButton loading={isSubmitting} className="mt-4">
-                    Create Account
-                </SubmitButton>
-            </FormLayout>
-
-            {/* Feedback Messages */}
-            {success && <p className="text-green-600 mt-4">Account created successfully!</p>}
-            {error && <p className="text-red-600 mt-4">Something went wrong. Try again.</p>}
-        </PageLayout>
+        <FormPage
+        title="Create Account"
+        onSubmit={handleSubmit}
+        loading={isSubmitting}
+        success={success}
+        error={error}
+        successText="Account Created Successfully!"
+        errorText="Something went wrong. Try again"
+        >
+            <FormField 
+                label="Name" 
+                name="name" 
+                value={form.name} 
+                onChange={handleChange}
+                error={errors.name}
+                helperText="Enter Account Name"    
+            />
+            <FormField 
+                label="Address" 
+                name="address" 
+                value={form.address} 
+                onChange={handleChange} 
+                error={errors.name}
+                helperText="Enter account address"
+            />
+        </FormPage>
     );
 }
