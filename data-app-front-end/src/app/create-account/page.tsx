@@ -1,10 +1,10 @@
 "use client";
 
-import FormField from "../../../components/FormField";
-import FormPage from "../../../components/FormPage";
+import FormField from "../../../components/Forms/FormField";
+import FormPage from "../../../components/Forms/FormPage";
 import { useForm } from "../hooks/useForm";
 import { schemaCreate } from "../../../lib/schemaCreate";
-import FieldRenderer from "../../../components/FormFieldRenderer";
+import FieldRenderer from "../../../components/Forms/FormFieldRenderer";
 
 import { z } from "zod";
 

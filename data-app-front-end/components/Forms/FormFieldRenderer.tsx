@@ -1,5 +1,5 @@
 import FormField from "./FormField";
-import { FieldConfig } from "../lib/schemaCreate";
+import { FieldConfig } from "../../lib/schemaCreate";
 
 
 interface FieldRendererProps<T> {
