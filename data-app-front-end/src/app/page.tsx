@@ -1,4 +1,4 @@
-import PageLayout from "../../components/PageLayout"
+import PageLayout from "../../components/Theme/PageLayout"
 
 export default function HomePage() {
   return(

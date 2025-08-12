@@ -1,8 +1,8 @@
 "use client";
-import PageLayout from "./PageLayout";
-import FormLayout from "./Forms/FormLayout";
-import SubmitButton from "./SubmitButton";
-import FormFeedback from "./FeedbackMessage";
+import PageLayout from "../Theme/PageLayout";
+import FormLayout from "./FormLayout";
+import SubmitButton from "../buttons/SubmitButton";
+import FormFeedback from "../Theme/FeedbackMessage";
 
 interface FormPageProps {
   title: string;

@@ -1,3 +1,14 @@
+
+export default function StepReview() {
+    const {
+        saleID,
+        
+    }
+    return(
+
+    );
+};
+
 // 3rd final step of SaleFormStepper
 
 

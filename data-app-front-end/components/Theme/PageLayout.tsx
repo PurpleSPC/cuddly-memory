@@ -1,4 +1,4 @@
-import Sidebar from "./Theme/Sidebar";
+import Sidebar from "./Sidebar";
 
 // min-h-screen = ensures full height
 // max-3xl mx-auto = centers with a max width
