@@ -1,3 +1,5 @@
+"use client"
+
 import SaleFormStepper from "../../../components/SaleStepper/SaleFormStepper";
 import { useSaleForm } from "../hooks/useSaleForm";
 import PageLayout from "../../../components/Theme/PageLayout";
@@ -7,10 +9,17 @@ export default function CreateSalePage(){
     const {
         step,
         setStep,
-        saleId,
-        submitBasicInfo,
-        saleForm,
-    } = useSaleForm<BasicSaleInfo>;
+        saleID,
+        basicInfoForm,
+    } = useSaleForm();
+
+    const handleSubmitBasicInfo = async () => {
+        try {
+            await basicInfoForm.submitForm();
+        } catch (error) {
+            console.error("Failed to submit basic info:", error);
+        }
+    };
 
     return (
         <PageLayout>
@@ -18,13 +27,12 @@ export default function CreateSalePage(){
 
             <SaleFormStepper
                 step={step}
-                setStep = {setStep}
+                setStep={setStep}
                 saleID={saleID}
-                onSubmitBasicInfo = {submitBasicInfo}
-                saleForm = {saleForm}
+                onSubmitBasicInfo={handleSubmitBasicInfo}
+                saleForm={basicInfoForm}
             />
-
         </PageLayout>
-    )
+    );
 }
 

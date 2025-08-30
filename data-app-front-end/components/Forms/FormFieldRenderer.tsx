@@ -22,7 +22,7 @@ export default function FieldRenderer<T>({
                 key={field.name}
                 label={field.label}
                 name={field.name}
-                value={values[field.name as keyof T]}
+                value={String(values[field.name as keyof T] || '')}
                 onChange={onChange}
                 error={errors[field.name as keyof T]}
                 helperText={field.helperText}

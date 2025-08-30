@@ -7,7 +7,7 @@ export const saleItemSchema = z.object({
     productID: z.number(),
     qty: z.number().lte(99, "quantity must not exceed 99").gte(0,"quantity must be greater than 0"),
     unitPrice: z.number(),
-    lineTotal: z.number().optional()   // line total will be auto calculated
+    lineTotal: z.number()   // line total will be auto calculated
 })
 
 export const saleItemArraySchema = z.array(saleItemSchema)

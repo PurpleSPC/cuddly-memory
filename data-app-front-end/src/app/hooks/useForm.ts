@@ -22,6 +22,10 @@ export function useForm<T>({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    await submitForm();
+  };
+
+  const submitForm = async () => {
     const formErrors = validate(form);
     if (Object.keys(formErrors).length) {
       setErrors(formErrors);
@@ -47,6 +51,7 @@ export function useForm<T>({
     form,
     handleChange,
     handleSubmit,
+    submitForm,
     isSubmitting,
     success,
     error,
