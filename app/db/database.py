@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from contextlib import contextmanager
 import os
 
-load_dotenv()
+load_dotenv(override=True)
 # creating db
 DATABASE_URL = (
     f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASS')}"
